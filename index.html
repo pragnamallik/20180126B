@@ -2,21 +2,71 @@
 <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1">
-    </head>
-    <body>
-        <h1>hello phonegap</h1>
-        <h2> I can't believe it's this simple. ... </h2>
-        <div id="connectionStatus" style="color:blue">Not connected to phonegap!</div>
+        <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.css" />
+        <!--link rel="stylesheet" href="https://rhildred.github.io/nativeDroid2/css/nativedroid2.css" / -->
+        <script src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
+        <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.min.js.map"></script>
         <script src="cordova.js"></script>
         <script>
-            var phonegapReady = function(){
-                oStatus = document.getElementById("connectionStatus");
-                oStatus.innerHTML = "Now connected to phonegap";
-                oStatus.style.color = "green";
+            /*
+            var phonegapReady = function()
+            {
             }
+            document.addEventListener("deviceready", phonegapReady, false);    
+            */
+            angular.module("TodoApp", []).controller("TodoCtrl", function ($scope)
+            {
+                var dbSize = 5 * 1024 * 1024; // 5MB
+                $scope.webdb = {};
 
-            document.addEventListener("deviceready", phonegapReady, false);
+                $scope.webdb.db = openDatabase("Test", "1", "Todo manager", dbSize);
+                var db = $scope.webdb.db;
+                db.transaction(function (tx) 
+                {
+                    tx.executeSql("CREATE TABLE IF NOT EXISTS " +
+                        "todo(ID TEXT PRIMARY KEY, todo TEXT, added_on DATETIME, finished_on DATETIME)", [],
+                        function () 
+                        {
+                            console.log("Table Created success");
+                        },
+                        function () 
+                        {
+                             console.log("Table Created failure"); 
+                        }
+                    );
+                });
 
+                $scope.addTodo = function () 
+                {
+                    var db = $scope.webdb.db;
+                    db.transaction(function (tx) 
+                    {
+                        var dToday = new Date();
+                        tx.executeSql("INSERT INTO todo(ID, todo, added_on) VALUES(?, ?, ?) ",
+                            ['q8', 'test', dToday],
+                            function () 
+                            {
+                                console.log("INSERT Success");
+                            },
+                            function () 
+                            {
+                                console.log("INSERT Failed");
+                            }
+                        );
+                    });
+                }                
+            });
         </script>
+    </head>
+    <body>
+        <h1>WebDB TodoList</h1>
+        <p>This is simple todolist. Type a task in the box below. Click on the plus button to add to the list</p>
+        <form ng-app="TodoApp" ng-controller="TodoCtrl" ng-submit="addTodo()">
+            <input ng-model="todoItem"/>
+            <button>+</button>
+        </form>
     </body>
 </html>
